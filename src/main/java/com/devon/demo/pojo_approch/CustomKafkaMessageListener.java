@@ -15,10 +15,12 @@ import org.springframework.kafka.support.Acknowledgment;
 /**
  * Created by Devon on 3/18/2017.
  */
-public class CustomKafkaMessageListener implements AcknowledgingMessageListener<Integer, String> ,ConsumerSeekAware {
+public class CustomKafkaMessageListener implements AcknowledgingMessageListener<Integer, String>,
+    ConsumerSeekAware {
 
   private IKafkaConsumer iKafkaConsumer;
   private Logger log = LoggerFactory.getLogger(CustomKafkaMessageListener.class);
+
   public CustomKafkaMessageListener(IKafkaConsumer iKafkaConsumer) {
     this.iKafkaConsumer = iKafkaConsumer;
   }
@@ -32,25 +34,32 @@ public class CustomKafkaMessageListener implements AcknowledgingMessageListener<
             Instant.ofEpochMilli(data.timestamp()).atZone(ZoneId.systemDefault())
                 .toLocalDateTime());
     iKafkaConsumer.getEvent(str2);
-   acknowledgment.acknowledge();
+    acknowledgment.acknowledge();
   }
 
   @Override
   public void registerSeekCallback(ConsumerSeekCallback consumerSeekCallback) {
-    log.info("===================registerSeekCallback");
+    // log.info("===================registerSeekCallback");
 
   }
 
   @Override
   public void onPartitionsAssigned(Map<TopicPartition, Long> map,
       ConsumerSeekCallback consumerSeekCallback) {
-    log.info("===================onPartitionsAssigned");
+
+    map.forEach((k, v) -> {
+      consumerSeekCallback.seek(k.topic(), k.partition(), 80);
+      log.info("=======================================onPartitionsAssigned - topic: {} partition: {} offset: {}", k.topic(),
+          k.partition(), v);
+
+    });
+
   }
 
   @Override
   public void onIdleContainer(Map<TopicPartition, Long> map,
       ConsumerSeekCallback consumerSeekCallback) {
-    log.info("===================onIdleContainer");
+    //log.info("===================onIdleContainer");
 
   }
 }
