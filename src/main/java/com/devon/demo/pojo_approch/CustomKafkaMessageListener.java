@@ -1,5 +1,8 @@
 package com.devon.demo.pojo_approch;
 
+import com.devon.demo.KafkaCassandraDedupApplication;
+import com.devon.demo.cassandra.DedupRepository;
+import com.devon.demo.cassandra.DedupTable;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.util.Map;
@@ -20,9 +23,10 @@ public class CustomKafkaMessageListener implements AcknowledgingMessageListener<
 
   private IKafkaConsumer iKafkaConsumer;
   private Logger log = LoggerFactory.getLogger(CustomKafkaMessageListener.class);
-
+  private DedupRepository dedupRepository;
   public CustomKafkaMessageListener(IKafkaConsumer iKafkaConsumer) {
     this.iKafkaConsumer = iKafkaConsumer;
+    this.dedupRepository = (DedupRepository) KafkaCassandraDedupApplication.getApplicationContext().getBean("dedupRepository");
   }
 
 
@@ -34,12 +38,21 @@ public class CustomKafkaMessageListener implements AcknowledgingMessageListener<
             Instant.ofEpochMilli(data.timestamp()).atZone(ZoneId.systemDefault())
                 .toLocalDateTime());
     iKafkaConsumer.getEvent(str2);
+    DedupTable dt = new DedupTable(data.topic(),data.partition(),data.offset()+1);
+    dedupRepository.save(dt);
+/*
     acknowledgment.acknowledge();
+*/
   }
 
   @Override
   public void registerSeekCallback(ConsumerSeekCallback consumerSeekCallback) {
-    // log.info("===================registerSeekCallback");
+ /*   List<DedupTable> listDedupTable = dedupRepository.findAll();
+
+    listDedupTable.stream().forEach(dedupTable -> {
+      log.info("=======================================Seek on start - topic: {} partition: {} offset: {}", dedupTable.getTopicName(),dedupTable.getPartition(),dedupTable.getOffset());
+      consumerSeekCallback.seek(dedupTable.getTopicName(),dedupTable.getPartition(),dedupTable.getOffset());
+    });*/
 
   }
 
@@ -48,9 +61,9 @@ public class CustomKafkaMessageListener implements AcknowledgingMessageListener<
       ConsumerSeekCallback consumerSeekCallback) {
 
     map.forEach((k, v) -> {
-      consumerSeekCallback.seek(k.topic(), k.partition(), 80);
-      log.info("=======================================onPartitionsAssigned - topic: {} partition: {} offset: {}", k.topic(),
-          k.partition(), v);
+      DedupTable dt = dedupRepository.findOffsetByTopicNameAndPartition(k.topic(),k.partition());
+      consumerSeekCallback.seek(k.topic(), k.partition(), dt.getOffset());
+      log.info("=======================================onPartitionsAssigned - topic: {} partition: {} offset: {}", k.topic(), k.partition(), dt.getOffset());
 
     });
 

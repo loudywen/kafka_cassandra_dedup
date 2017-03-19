@@ -15,6 +15,7 @@ import org.springframework.kafka.core.ProducerFactory;
 import org.springframework.kafka.listener.AbstractMessageListenerContainer.AckMode;
 import org.springframework.kafka.listener.ConcurrentMessageListenerContainer;
 import org.springframework.kafka.listener.config.ContainerProperties;
+import org.springframework.kafka.support.converter.StringJsonMessageConverter;
 
 /**
  * Created by Devon on 3/18/2017.
@@ -26,8 +27,7 @@ public class KafkaPOJOConfig {
 
     Map<String, Object> props = consumerProps();
 
-    DefaultKafkaConsumerFactory<Integer, String> cf =
-        new DefaultKafkaConsumerFactory<Integer, String>(props);
+    DefaultKafkaConsumerFactory<Integer, String> cf = new DefaultKafkaConsumerFactory<Integer, String>(props);
 
 
     CustomKafkaMessageListener ckml = new CustomKafkaMessageListener(iKafkaConsumer);
@@ -35,8 +35,8 @@ public class KafkaPOJOConfig {
 
     containerProps.setMessageListener(ckml);
     containerProps.setAckMode(AckMode.MANUAL_IMMEDIATE);
-    ConcurrentMessageListenerContainer<Integer, String> container =
-        new ConcurrentMessageListenerContainer<>(cf, containerProps);
+
+    ConcurrentMessageListenerContainer<Integer, String> container = new ConcurrentMessageListenerContainer<>(cf, containerProps);
 
     container.setConcurrency(10);
     return container;
