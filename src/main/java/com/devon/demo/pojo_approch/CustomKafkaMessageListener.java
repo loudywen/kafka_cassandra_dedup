@@ -62,8 +62,15 @@ public class CustomKafkaMessageListener implements AcknowledgingMessageListener<
 
     map.forEach((k, v) -> {
       DedupTable dt = dedupRepository.findOffsetByTopicNameAndPartition(k.topic(),k.partition());
-      consumerSeekCallback.seek(k.topic(), k.partition(), dt.getOffset());
-      log.info("=======================================onPartitionsAssigned - topic: {} partition: {} offset: {}", k.topic(), k.partition(), dt.getOffset());
+      if(dt != null){
+        consumerSeekCallback.seek(k.topic(), k.partition(), dt.getOffset());
+        log.info("=======================================onPartitionsAssigned - topic: {} partition: {} offset: {}", k.topic(), k.partition(), dt.getOffset());
+
+      }else{
+        consumerSeekCallback.seek(k.topic(), k.partition(), v);
+        log.info("=======================================db null, get from zookeeper - topic: {} partition: {} offset: {}", k.topic(), k.partition(),v);
+
+      }
 
     });
 
