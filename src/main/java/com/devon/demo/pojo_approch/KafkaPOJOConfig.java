@@ -1,7 +1,5 @@
 package com.devon.demo.pojo_approch;
 
-import java.util.HashMap;
-import java.util.Map;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.IntegerDeserializer;
@@ -14,8 +12,11 @@ import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.core.ProducerFactory;
 import org.springframework.kafka.listener.AbstractMessageListenerContainer.AckMode;
 import org.springframework.kafka.listener.ConcurrentMessageListenerContainer;
+import org.springframework.kafka.listener.adapter.FilteringAcknowledgingMessageListenerAdapter;
 import org.springframework.kafka.listener.config.ContainerProperties;
-import org.springframework.kafka.support.converter.StringJsonMessageConverter;
+
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Created by Devon on 3/18/2017.
@@ -31,9 +32,10 @@ public class KafkaPOJOConfig {
 
 
     CustomKafkaMessageListener ckml = new CustomKafkaMessageListener(iKafkaConsumer);
+    CustomRecordFilter cff = new CustomRecordFilter();
+    FilteringAcknowledgingMessageListenerAdapter faml = new FilteringAcknowledgingMessageListenerAdapter(ckml,cff,true);
 
-
-    containerProps.setMessageListener(ckml);
+    containerProps.setMessageListener(faml);
     containerProps.setAckMode(AckMode.MANUAL_IMMEDIATE);
 
     ConcurrentMessageListenerContainer<Integer, String> container = new ConcurrentMessageListenerContainer<>(cf, containerProps);
