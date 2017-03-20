@@ -24,9 +24,11 @@ public class CustomKafkaMessageListener implements AcknowledgingMessageListener<
   private IKafkaConsumer iKafkaConsumer;
   private Logger log = LoggerFactory.getLogger(CustomKafkaMessageListener.class);
   private DedupRepository dedupRepository;
+
   public CustomKafkaMessageListener(IKafkaConsumer iKafkaConsumer) {
     this.iKafkaConsumer = iKafkaConsumer;
-    this.dedupRepository = (DedupRepository) KafkaCassandraDedupApplication.getApplicationContext().getBean("dedupRepository");
+    this.dedupRepository = (DedupRepository) KafkaCassandraDedupApplication.getApplicationContext()
+        .getBean("dedupRepository");
   }
 
 
@@ -37,22 +39,24 @@ public class CustomKafkaMessageListener implements AcknowledgingMessageListener<
             data.topic(), data.key(), data.partition(), data.offset(), data.value(),
             Instant.ofEpochMilli(data.timestamp()).atZone(ZoneId.systemDefault())
                 .toLocalDateTime());
-    iKafkaConsumer.getEvent(str2);
-    DedupTable dt = new DedupTable(data.topic(),data.partition(),data.offset()+1);
-    dedupRepository.save(dt);
-/*
+
+    try {
+
+      DedupTable dt = new DedupTable(data.topic(), data.partition(), data.offset() + 1);
+      iKafkaConsumer.getEvent(str2);
+      dedupRepository.save(dt);
+      /*
     acknowledgment.acknowledge();
-*/
+      */
+    } catch (Exception e) {
+
+    }
+
+
   }
 
   @Override
   public void registerSeekCallback(ConsumerSeekCallback consumerSeekCallback) {
- /*   List<DedupTable> listDedupTable = dedupRepository.findAll();
-
-    listDedupTable.stream().forEach(dedupTable -> {
-      log.info("=======================================Seek on start - topic: {} partition: {} offset: {}", dedupTable.getTopicName(),dedupTable.getPartition(),dedupTable.getOffset());
-      consumerSeekCallback.seek(dedupTable.getTopicName(),dedupTable.getPartition(),dedupTable.getOffset());
-    });*/
 
   }
 
@@ -61,14 +65,18 @@ public class CustomKafkaMessageListener implements AcknowledgingMessageListener<
       ConsumerSeekCallback consumerSeekCallback) {
 
     map.forEach((k, v) -> {
-      DedupTable dt = dedupRepository.findOffsetByTopicNameAndPartition(k.topic(),k.partition());
-      if(dt != null){
+      DedupTable dt = dedupRepository.findOffsetByTopicNameAndPartition(k.topic(), k.partition());
+      if (dt != null) {
         consumerSeekCallback.seek(k.topic(), k.partition(), dt.getOffset());
-        log.info("=======================================onPartitionsAssigned - topic: {} partition: {} offset: {}", k.topic(), k.partition(), dt.getOffset());
+        log.info(
+            "=======================================onPartitionsAssigned - topic: {} partition: {} offset: {}",
+            k.topic(), k.partition(), dt.getOffset());
 
-      }else{
+      } else {
         consumerSeekCallback.seek(k.topic(), k.partition(), v);
-        log.info("=======================================db null, get from zookeeper - topic: {} partition: {} offset: {}", k.topic(), k.partition(),v);
+        log.info(
+            "=======================================db null, get from zookeeper - topic: {} partition: {} offset: {}",
+            k.topic(), k.partition(), v);
 
       }
 
