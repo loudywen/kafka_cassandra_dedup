@@ -5,5 +5,5 @@ package com.devon.demo.pojo_approch;
  */
 public interface IKafkaConsumer  {
 
-  void getEvent(String str);
+  void getEvent(String str) ;
 }

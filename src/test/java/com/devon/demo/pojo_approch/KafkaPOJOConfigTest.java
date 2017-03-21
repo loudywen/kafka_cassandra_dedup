@@ -1,11 +1,11 @@
 package com.devon.demo.pojo_approch;
 
-import java.util.concurrent.CountDownLatch;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.kafka.core.KafkaTemplate;
-import org.springframework.messaging.support.GenericMessage;
+
+import java.util.concurrent.CountDownLatch;
 
 /**
  * Created by Devon on 3/18/2017.
@@ -20,10 +20,12 @@ public class KafkaPOJOConfigTest implements IKafkaConsumer {
     KafkaPOJOConfig                kconfig  = new KafkaPOJOConfig();
     KafkaTemplate<Integer, String> template = kconfig.createTemplate();
     template.setDefaultTopic("dedup");
-    template.sendDefault(0, "foo1");
-    for(int x = 0 ; x <10; x++){
-      GenericMessage<String> msg = new GenericMessage<String>("test"+x);
-      template.send(msg);
+//    template.sendDefault(0, "foo1");
+    for(int x = 0 ; x <40; x++){
+   //   GenericMessage<String> msg = new GenericMessage<String>("test"+x);
+      //template.send(msg);
+       template.sendDefault(x, "foo"+x);
+
     }
 
     template.flush();
