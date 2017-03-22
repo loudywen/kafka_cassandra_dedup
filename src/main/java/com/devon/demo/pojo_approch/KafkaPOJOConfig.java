@@ -1,11 +1,15 @@
 package com.devon.demo.pojo_approch;
 
+import java.util.HashMap;
+import java.util.Map;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.IntegerDeserializer;
 import org.apache.kafka.common.serialization.IntegerSerializer;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.kafka.common.serialization.StringSerializer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
 import org.springframework.kafka.core.DefaultKafkaProducerFactory;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -16,39 +20,48 @@ import org.springframework.kafka.listener.adapter.FilteringAcknowledgingMessageL
 import org.springframework.kafka.listener.adapter.RetryingAcknowledgingMessageListenerAdapter;
 import org.springframework.kafka.listener.config.ContainerProperties;
 import org.springframework.retry.backoff.FixedBackOffPolicy;
+import org.springframework.retry.policy.SimpleRetryPolicy;
 import org.springframework.retry.support.RetryTemplate;
-
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * Created by Devon on 3/18/2017.
  */
 public class KafkaPOJOConfig {
 
+  private Logger log = LoggerFactory.getLogger(KafkaPOJOConfig.class);
+
   public ConcurrentMessageListenerContainer<Integer, String> createContainer(
-          ContainerProperties containerProps, IKafkaConsumer iKafkaConsumer) {
+      ContainerProperties containerProps, IKafkaConsumer iKafkaConsumer) {
 
     Map<String, Object> props = consumerProps();
 
-    DefaultKafkaConsumerFactory<Integer, String> cf = new DefaultKafkaConsumerFactory<Integer, String>(props);
+    DefaultKafkaConsumerFactory<Integer, String> cf = new DefaultKafkaConsumerFactory<Integer, String>(
+        props);
 
-
-    CustomKafkaMessageListener ckml = new CustomKafkaMessageListener(iKafkaConsumer);
+    CustomKafkaMessageListener ckml = new CustomKafkaMessageListener(
+        iKafkaConsumer);
     CustomRecordFilter cff = new CustomRecordFilter();
-    FilteringAcknowledgingMessageListenerAdapter faml = new FilteringAcknowledgingMessageListenerAdapter(ckml,cff,true);
+    FilteringAcknowledgingMessageListenerAdapter faml = new FilteringAcknowledgingMessageListenerAdapter(
+        ckml, cff, false);
+
+    SimpleRetryPolicy retryPolicy = new SimpleRetryPolicy();
+    retryPolicy.setMaxAttempts(5);
+
+    FixedBackOffPolicy backOffPolicy = new FixedBackOffPolicy();
+    backOffPolicy.setBackOffPeriod(1500); // 1.5 seconds
+
     RetryTemplate rt = new RetryTemplate();
-
-    FixedBackOffPolicy fixedBackOffPolicy = new FixedBackOffPolicy();
-    fixedBackOffPolicy.setBackOffPeriod(1000);
-    rt.setBackOffPolicy(fixedBackOffPolicy);
-
-    RetryingAcknowledgingMessageListenerAdapter rml = new RetryingAcknowledgingMessageListenerAdapter(faml,rt);
+    rt.setBackOffPolicy(backOffPolicy);
+    rt.setRetryPolicy(retryPolicy);
+    rt.registerListener(ckml);
+    RetryingAcknowledgingMessageListenerAdapter rml = new RetryingAcknowledgingMessageListenerAdapter(
+        faml, rt);
 
     containerProps.setMessageListener(rml);
     containerProps.setAckMode(AbstractMessageListenerContainer.AckMode.MANUAL_IMMEDIATE);
     containerProps.setErrorHandler(ckml);
-    ConcurrentMessageListenerContainer<Integer, String> container = new ConcurrentMessageListenerContainer<>(cf, containerProps);
+    ConcurrentMessageListenerContainer<Integer, String> container = new ConcurrentMessageListenerContainer<>(
+        cf, containerProps);
     container.setConcurrency(10);
     return container;
   }
@@ -79,8 +92,8 @@ public class KafkaPOJOConfig {
 
   private Map<String, Object> consumerProps() {
     Map<String, Object> props = new HashMap<>();
-//    props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, "192.168.0.28:9092");
-    props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, "172.16.143.138:9092");
+    props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, "192.168.0.28:9092");
+//    props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, "172.16.143.138:9092");
 
     props.put(ConsumerConfig.GROUP_ID_CONFIG, "pojokafka");
     props.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, false);
@@ -93,8 +106,8 @@ public class KafkaPOJOConfig {
 
   private Map<String, Object> senderProps() {
     Map<String, Object> props = new HashMap<>();
-//    props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, "192.168.0.28:9092");
-    props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, "172.16.143.138:9092");
+    props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, "192.168.0.28:9092");
+//    props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, "172.16.143.138:9092");
 
     props.put(ProducerConfig.RETRIES_CONFIG, 0);
     props.put(ProducerConfig.BATCH_SIZE_CONFIG, 16384);

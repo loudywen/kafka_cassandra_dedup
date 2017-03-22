@@ -4,6 +4,8 @@ import com.devon.demo.cassandra.DedupRepository;
 import com.devon.demo.cassandra.DedupTable;
 import com.devon.demo.pojo_approch.IKafkaConsumer;
 import com.devon.demo.pojo_approch.KafkaPOJOConfig;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicLong;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
@@ -16,8 +18,6 @@ import org.springframework.kafka.listener.ConcurrentMessageListenerContainer;
 import org.springframework.kafka.listener.config.ContainerProperties;
 import org.springframework.kafka.support.TopicPartitionInitialOffset;
 
-import java.util.List;
-
 @SpringBootApplication
 @EnableCassandraRepositories(basePackages = {"com.devon.demo.cassandra"})
 
@@ -25,50 +25,53 @@ public class KafkaCassandraDedupApplication implements IKafkaConsumer, Applicati
 
 
   private static ApplicationContext applicationContext;
-  private Logger                         log = LoggerFactory
+  private Logger                         log   = LoggerFactory
       .getLogger(KafkaCassandraDedupApplication.class);
-  static  KafkaCassandraDedupApplication k   = new KafkaCassandraDedupApplication();
-private int count;
+  static  KafkaCassandraDedupApplication k     = new KafkaCassandraDedupApplication();
+  private AtomicLong                     count = new AtomicLong();
 
   public static void main(String[] args) throws InterruptedException {
     SpringApplication.run(KafkaCassandraDedupApplication.class, args);
 
-    DedupRepository  dedupRepository = (DedupRepository) KafkaCassandraDedupApplication
+    DedupRepository dedupRepository = (DedupRepository) KafkaCassandraDedupApplication
         .getApplicationContext().getBean("dedupRepository");
 
-    List<DedupTable> listDedupTable  = dedupRepository.findAll();
+    List<DedupTable> listDedupTable = dedupRepository.findAll();
 
     KafkaPOJOConfig kconfig = new KafkaPOJOConfig();
 
-    TopicPartitionInitialOffset[] topic1PartitionS = new TopicPartitionInitialOffset[listDedupTable.size()];
-    for(int x = 0 ; x < listDedupTable.size(); x++){
-      topic1PartitionS[x] = new TopicPartitionInitialOffset(listDedupTable.get(x).getTopicName(),listDedupTable.get(x).getPartition(),listDedupTable.get(x).getOffset()+1);
+    TopicPartitionInitialOffset[] topic1PartitionS = new TopicPartitionInitialOffset[listDedupTable
+        .size()];
+
+    for (int x = 0; x < listDedupTable.size(); x++) {
+      topic1PartitionS[x] = new TopicPartitionInitialOffset(listDedupTable.get(x).getTopicName(),
+          listDedupTable.get(x).getPartition(), listDedupTable.get(x).getOffset());
     }
 
     ContainerProperties containerProps = new ContainerProperties("dedup");
 
     ConcurrentMessageListenerContainer<Integer, String> container = kconfig
         .createContainer(containerProps, k);
-        container.start();
+    container.start();
 
-      //kconfig.factory(containerProps,k);
+    //kconfig.factory(containerProps,k);
 
 
    /* Thread.sleep(5000);
     container.stop();*/
   }
 
+
   @Override
   public void getEvent(String str) {
-    ++count;
 
-      if(count<3){
-          log.info("================ {}", str);
-
-      }else{
-          this.count = 0;
-          throw new RuntimeException("dummy exception");
-      }
+    //if (count.incrementAndGet()< 3) {
+    if (str.contains("foo4")) {
+      log.info(str);
+    } else {
+      throw new RuntimeException("dummy exception");
+    }
+    // log.info("================ {} -------- count: {}", str, count.get());
   }
 
   @Override
@@ -79,5 +82,6 @@ private int count;
   public static ApplicationContext getApplicationContext() {
     return applicationContext;
   }
+
 
 }

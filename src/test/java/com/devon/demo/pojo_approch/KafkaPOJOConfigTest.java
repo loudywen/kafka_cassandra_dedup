@@ -21,10 +21,10 @@ public class KafkaPOJOConfigTest implements IKafkaConsumer {
     KafkaTemplate<Integer, String> template = kconfig.createTemplate();
     template.setDefaultTopic("dedup");
 //    template.sendDefault(0, "foo1");
-    for(int x = 0 ; x <40; x++){
+    for(int x = 0 ; x <1; x++){
    //   GenericMessage<String> msg = new GenericMessage<String>("test"+x);
       //template.send(msg);
-       template.sendDefault(x, "foo"+x);
+       template.sendDefault(x, "foo4");
 
     }
 
