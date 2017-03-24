@@ -1,8 +1,5 @@
-/*
 package com.devon.demo.annotation_approch;
 
-import java.util.HashMap;
-import java.util.Map;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.StringDeserializer;
@@ -10,17 +7,10 @@ import org.apache.kafka.common.serialization.StringSerializer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory;
-import org.springframework.kafka.core.ConsumerFactory;
-import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
-import org.springframework.kafka.core.DefaultKafkaProducerFactory;
-import org.springframework.kafka.core.KafkaTemplate;
-import org.springframework.kafka.core.ProducerFactory;
-import org.springframework.retry.support.RetryTemplate;
+import org.springframework.kafka.core.*;
 
-*/
-/**
- * Created by Devon on 3/21/2017.
- *//*
+import java.util.HashMap;
+import java.util.Map;
 
 @Configuration
 public class CommonConfiguration {
@@ -53,10 +43,11 @@ public class CommonConfiguration {
   @Bean
   public Map<String, Object> consumerProperties() {
     Map<String, Object> props = new HashMap<>();
-    props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, "192.168.0.28:9092");
-    props.put(ConsumerConfig.GROUP_ID_CONFIG, "pojokafka");
+      props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, "172.16.143.138:9092");
+      props.put(ConsumerConfig.GROUP_ID_CONFIG, "pojokafka1");
     props.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, false);
     props.put(ConsumerConfig.SESSION_TIMEOUT_MS_CONFIG, 15000);
+      props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
     props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
     props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
     return props;
@@ -70,15 +61,14 @@ public class CommonConfiguration {
     return factory;
   }
 
-*/
-/*  @Bean
-  public ConcurrentKafkaListenerContainerFactory<String, String> jsonKafkaListenerContainerFactory() {
-    ConcurrentKafkaListenerContainerFactory<String, String> factory =
-        new ConcurrentKafkaListenerContainerFactory<>();
-    factory.setConsumerFactory(consumerFactory());
-    factory.setMessageConverter(new StringJsonMessageConverter());
-    return factory;
-  }*//*
+//  @Bean
+//  public ConcurrentKafkaListenerContainerFactory<String, String> jsonKafkaListenerContainerFactory() {
+//    ConcurrentKafkaListenerContainerFactory<String, String> factory =
+//        new ConcurrentKafkaListenerContainerFactory<>();
+//    factory.setConsumerFactory(consumerFactory());
+//    factory.setMessageConverter(new StringJsonMessageConverter());
+//    return factory;
+//  }
 
 
   @Bean
@@ -86,20 +76,18 @@ public class CommonConfiguration {
     ConcurrentKafkaListenerContainerFactory<String, String> factory =
         new ConcurrentKafkaListenerContainerFactory<>();
     factory.setConsumerFactory(consumerFactory());
-    factory.setRetryTemplate(new RetryTemplate());
+      // factory.setRetryTemplate(new RetryTemplate());
     factory.setConcurrency(10);
-*/
-/*    factory.setRecordFilterStrategy(new RecordFilterStrategy<String, String>() {
-
-      @Override
-      public boolean filter(ConsumerRecord<String, String> consumerRecord) {
-        return consumerRecord.value().contains("foo");
-      }
-
-    });*//*
+//    factory.setRecordFilterStrategy(new RecordFilterStrategy<String, String>() {
+//
+//      @Override
+//      public boolean filter(ConsumerRecord<String, String> consumerRecord) {
+//        return consumerRecord.value().contains("foo");
+//      }
+//
+//    });
 
     return factory;
   }
 
 }
-*/

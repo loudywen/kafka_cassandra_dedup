@@ -3,11 +3,6 @@ package com.devon.demo.pojo_approch;
 import com.devon.demo.KafkaCassandraDedupApplication;
 import com.devon.demo.cassandra.DedupRepository;
 import com.devon.demo.cassandra.DedupTable;
-import java.text.SimpleDateFormat;
-import java.time.Instant;
-import java.time.ZoneId;
-import java.util.Map;
-import java.util.concurrent.atomic.AtomicLong;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.common.TopicPartition;
 import org.slf4j.Logger;
@@ -19,6 +14,12 @@ import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.retry.RetryCallback;
 import org.springframework.retry.RetryContext;
 import org.springframework.retry.RetryListener;
+
+import java.text.SimpleDateFormat;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicLong;
 
 
 /**
@@ -85,15 +86,15 @@ public class CustomKafkaMessageListener implements AcknowledgingMessageListener<
       DedupTable dt = dedupRepository.findOffsetByTopicNameAndPartition(k.topic(), k.partition());
       if (dt != null) {
         consumerSeekCallback.seek(k.topic(), k.partition(), dt.getOffset());
-        log.info(
-            "onPartitionsAssigned - topic: {} partition: {} offset: {}",
-            k.topic(), k.partition(), dt.getOffset());
+//        log.info(
+//            "onPartitionsAssigned - topic: {} partition: {} offset: {}",
+//            k.topic(), k.partition(), dt.getOffset());
 
       } else {
         consumerSeekCallback.seek(k.topic(), k.partition(), v);
-        log.info(
-            "DB null, get from zookeeper - topic: {} partition: {} offset: {}",
-            k.topic(), k.partition(), v);
+//        log.info(
+//            "DB null, get from zookeeper - topic: {} partition: {} offset: {}",
+//            k.topic(), k.partition(), v);
 
       }
 
@@ -111,8 +112,8 @@ public class CustomKafkaMessageListener implements AcknowledgingMessageListener<
 
   @Override
   public void handle(Exception thrownException, ConsumerRecord<?, ?> data) {
-    log.error("topic: {}, partition: {}, offset: {} payload: {}", data.topic(), data.partition(),
-        data.offset(),data.value());
+    //  log.error("topic: {}, partition: {}, offset: {} payload: {}", data.topic(), data.partition(),
+//        data.offset(),data.value());
     log.error(thrownException.getMessage(), thrownException);
 
   }
@@ -123,16 +124,15 @@ public class CustomKafkaMessageListener implements AcknowledgingMessageListener<
       RetryCallback<CustomKafkaMessageListener, Exception> retryCallback) {
 
 
-
-    log.info("========open==========");
-    return false;
+    //log.info("========open==========");
+    return true;
   }
 
   @Override
   public <CustomKafkaMessageListener, Exception extends Throwable> void close(
       RetryContext retryContext,
       RetryCallback<CustomKafkaMessageListener, Exception> retryCallback, Throwable throwable) {
-    log.info("=========close=========");
+    // log.info("=========close=========");
 
   }
 
@@ -142,7 +142,7 @@ public class CustomKafkaMessageListener implements AcknowledgingMessageListener<
       RetryCallback<CustomKafkaMessageListener, Exception> retryCallback, Throwable throwable) {
 
 
-    log.info("========onError========== count: {}, {}",retryContext.getRetryCount(),throwable);
+    // log.info("========onError========== count: {}, {}",retryContext.getRetryCount(),throwable);
 
   }
 }

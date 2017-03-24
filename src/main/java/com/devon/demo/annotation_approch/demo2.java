@@ -1,7 +1,5 @@
-/*
 package com.devon.demo.annotation_approch;
 
-import java.util.concurrent.CountDownLatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.SpringApplication;
@@ -10,6 +8,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.data.cassandra.repository.config.EnableCassandraRepositories;
 import org.springframework.kafka.annotation.EnableKafka;
 import org.springframework.kafka.annotation.KafkaListener;
+
+import java.util.concurrent.CountDownLatch;
 
 @SpringBootApplication
 @EnableCassandraRepositories(basePackages = {"com.devon.demo.cassandra"})
@@ -39,19 +39,19 @@ public class demo2 {
     @KafkaListener(topics = "dedup", containerFactory = "retryKafkaListenerContainerFactory")
     public void listen(String foo) {
       ++count;
-      if (this.count < 3) {
-        System.out.println("Received: " + foo);
-        System.out.println("Success: " + foo);
-
-      } else {
-        System.out.println("failed: " + foo);
-
-        throw new RuntimeException("retry");
-      }
+//      if (this.count < 3) {
+//        System.out.println("Received: " + foo);
+//        System.out.println("Success: " + foo);
+//
+//      } else {
+//        System.out.println("failed: " + foo);
+//
+//        throw new RuntimeException("retry");
+//      }
+        System.out.println("====" + count);
 
     }
 
   }
 
 }
-*/
