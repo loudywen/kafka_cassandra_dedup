@@ -8,8 +8,6 @@ import org.apache.kafka.common.serialization.IntegerDeserializer;
 import org.apache.kafka.common.serialization.IntegerSerializer;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.kafka.common.serialization.StringSerializer;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
 import org.springframework.kafka.core.DefaultKafkaProducerFactory;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -28,7 +26,6 @@ import org.springframework.retry.support.RetryTemplate;
  */
 public class KafkaPOJOConfig {
 
-  private Logger log = LoggerFactory.getLogger(KafkaPOJOConfig.class);
 
   public ConcurrentMessageListenerContainer<Integer, String> createContainer(
       ContainerProperties containerProps, IKafkaConsumer iKafkaConsumer) {
@@ -40,9 +37,10 @@ public class KafkaPOJOConfig {
 
     CustomKafkaMessageListener ckml = new CustomKafkaMessageListener(
         iKafkaConsumer);
+
     CustomRecordFilter cff = new CustomRecordFilter();
     FilteringAcknowledgingMessageListenerAdapter faml = new FilteringAcknowledgingMessageListenerAdapter(
-        ckml, cff, false);
+        ckml, cff, true);
 
     SimpleRetryPolicy retryPolicy = new SimpleRetryPolicy();
     retryPolicy.setMaxAttempts(5);
@@ -60,8 +58,10 @@ public class KafkaPOJOConfig {
     containerProps.setMessageListener(rml);
     containerProps.setAckMode(AbstractMessageListenerContainer.AckMode.MANUAL_IMMEDIATE);
     containerProps.setErrorHandler(ckml);
+containerProps.setAckOnError(false);
     ConcurrentMessageListenerContainer<Integer, String> container = new ConcurrentMessageListenerContainer<>(
         cf, containerProps);
+
     container.setConcurrency(10);
     return container;
   }
@@ -87,13 +87,14 @@ public class KafkaPOJOConfig {
     ProducerFactory<Integer, String> pf =
         new DefaultKafkaProducerFactory<Integer, String>(senderProps);
     KafkaTemplate<Integer, String> template = new KafkaTemplate<>(pf);
+
     return template;
   }
 
   private Map<String, Object> consumerProps() {
     Map<String, Object> props = new HashMap<>();
     props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, "192.168.0.28:9092");
-//    props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, "172.16.143.138:9092");
+//    props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, "172.16.143.138:9092");
 
     props.put(ConsumerConfig.GROUP_ID_CONFIG, "pojokafka");
     props.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, false);

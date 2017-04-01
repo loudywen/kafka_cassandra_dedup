@@ -33,6 +33,8 @@ public class CustomKafkaMessageListener implements AcknowledgingMessageListener<
   private final SimpleDateFormat simpleDateFormat;
   private AtomicLong retryCount = new AtomicLong();
 
+  private ThreadLocal<ConsumerSeekCallback> threadLocal = new ThreadLocal<>();
+
   public CustomKafkaMessageListener(IKafkaConsumer iKafkaConsumer) {
     this.iKafkaConsumer = iKafkaConsumer;
     this.dedupRepository = (DedupRepository) KafkaCassandraDedupApplication.getApplicationContext()
@@ -51,8 +53,7 @@ public class CustomKafkaMessageListener implements AcknowledgingMessageListener<
     DedupTable dt = new DedupTable(data.topic(), data.partition(), data.offset() + 1);
     iKafkaConsumer.getEvent(str2);
     dedupRepository.save(dt);
-
-    // acknowledgment.acknowledge();
+    acknowledgment.acknowledge();
 
 
 
@@ -74,7 +75,8 @@ public class CustomKafkaMessageListener implements AcknowledgingMessageListener<
 
   @Override
   public void registerSeekCallback(ConsumerSeekCallback consumerSeekCallback) {
-
+    log.info("===================Thread: {}", Thread.currentThread().getId());
+    threadLocal.set(consumerSeekCallback);
   }
 
   @Override
@@ -84,16 +86,20 @@ public class CustomKafkaMessageListener implements AcknowledgingMessageListener<
     map.forEach((k, v) -> {
       DedupTable dt = dedupRepository.findOffsetByTopicNameAndPartition(k.topic(), k.partition());
       if (dt != null) {
-        consumerSeekCallback.seek(k.topic(), k.partition(), dt.getOffset());
-        log.info(
-            "onPartitionsAssigned - topic: {} partition: {} offset: {}",
-            k.topic(), k.partition(), dt.getOffset());
 
-      } else {
-        consumerSeekCallback.seek(k.topic(), k.partition(), v);
-        log.info(
-            "DB null, get from zookeeper - topic: {} partition: {} offset: {}",
-            k.topic(), k.partition(), v);
+        if (v <= dt.getOffset()) {
+          consumerSeekCallback.seek(k.topic(), k.partition(), dt.getOffset());
+          log.info(
+              "Thread {} onPartitionsAssigned - topic: {} partition: {} offset: {}",
+              Thread.currentThread().getId() + "\\|" + Thread.currentThread().getName(), k.topic(),
+              k.partition(), dt.getOffset());
+        } else {
+          consumerSeekCallback.seek(k.topic(), k.partition(), v);
+          log.info(
+              "Thread {} DB less then zookeeper, get from zookeeper - topic: {} partition: {} offset: {}",
+              Thread.currentThread().getId() + "\\|" + Thread.currentThread().getName(), k.topic(),
+              k.partition(), v);
+        }
 
       }
 
@@ -111,10 +117,13 @@ public class CustomKafkaMessageListener implements AcknowledgingMessageListener<
 
   @Override
   public void handle(Exception thrownException, ConsumerRecord<?, ?> data) {
-    log.error("topic: {}, partition: {}, offset: {} payload: {}", data.topic(), data.partition(),
-        data.offset(),data.value());
+    log.error(
+        "==========error handler =========== topic: {}, partition: {}, offset: {} payload: {}",
+        data.topic(), data.partition(),
+        data.offset(), data.value());
     log.error(thrownException.getMessage(), thrownException);
-
+    log.error("==========error handler re seek the fail offset =========== ");
+    //threadLocal.get().seek(data.topic(), data.partition(), data.offset());
   }
 
   @Override
@@ -122,17 +131,15 @@ public class CustomKafkaMessageListener implements AcknowledgingMessageListener<
       RetryContext retryContext,
       RetryCallback<CustomKafkaMessageListener, Exception> retryCallback) {
 
-
-
-    log.info("========open==========");
-    return false;
+    //log.info("========open==========");
+    return true;
   }
 
   @Override
   public <CustomKafkaMessageListener, Exception extends Throwable> void close(
       RetryContext retryContext,
       RetryCallback<CustomKafkaMessageListener, Exception> retryCallback, Throwable throwable) {
-    log.info("=========close=========");
+   // log.info("=========close=========");
 
   }
 
@@ -141,8 +148,7 @@ public class CustomKafkaMessageListener implements AcknowledgingMessageListener<
       RetryContext retryContext,
       RetryCallback<CustomKafkaMessageListener, Exception> retryCallback, Throwable throwable) {
 
-
-    log.info("========onError========== count: {}, {}",retryContext.getRetryCount(),throwable);
+   // log.info("========onError========== count: {}, {}", retryContext.getRetryCount(), throwable);
 
   }
 }

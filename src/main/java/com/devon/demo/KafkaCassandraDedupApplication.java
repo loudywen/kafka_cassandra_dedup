@@ -17,10 +17,12 @@ import org.springframework.data.cassandra.repository.config.EnableCassandraRepos
 import org.springframework.kafka.listener.ConcurrentMessageListenerContainer;
 import org.springframework.kafka.listener.config.ContainerProperties;
 import org.springframework.kafka.support.TopicPartitionInitialOffset;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 @SpringBootApplication
 @EnableCassandraRepositories(basePackages = {"com.devon.demo.cassandra"})
-
+@RestController
 public class KafkaCassandraDedupApplication implements IKafkaConsumer, ApplicationContextAware {
 
 
@@ -29,6 +31,7 @@ public class KafkaCassandraDedupApplication implements IKafkaConsumer, Applicati
       .getLogger(KafkaCassandraDedupApplication.class);
   static  KafkaCassandraDedupApplication k     = new KafkaCassandraDedupApplication();
   private AtomicLong                     count = new AtomicLong();
+  static ConcurrentMessageListenerContainer<Integer, String> container2;
 
   public static void main(String[] args) throws InterruptedException {
     SpringApplication.run(KafkaCassandraDedupApplication.class, args);
@@ -52,8 +55,16 @@ public class KafkaCassandraDedupApplication implements IKafkaConsumer, Applicati
 
     ConcurrentMessageListenerContainer<Integer, String> container = kconfig
         .createContainer(containerProps, k);
+    container.setBeanName("dedup-");
+
     container.start();
 
+//    ContainerProperties containerProps2 = new ContainerProperties("dedup2");
+
+//    container2 = kconfig
+//        .createContainer(containerProps2, k);
+//    container2.setBeanName("dedup2-");
+//    container2.start();
     //kconfig.factory(containerProps,k);
 
 
@@ -62,15 +73,26 @@ public class KafkaCassandraDedupApplication implements IKafkaConsumer, Applicati
   }
 
 
+  @GetMapping("/stop")
+  public void stop(){
+    container2.stop();
+  }
+
+  @GetMapping("/start")
+  public void start(){
+    container2.start();
+  }
+
   @Override
   public void getEvent(String str) {
-
+    log.info("{} - Thread: {}", str,
+        Thread.currentThread().getId() + "\\|" + Thread.currentThread().getName());
     //if (count.incrementAndGet()< 3) {
-    if (str.contains("foo4")) {
-      log.info(str);
+   /* if (str.contains("foo4")) {
+      //log.info(str);
     } else {
-      throw new RuntimeException("dummy exception");
-    }
+     // throw new RuntimeException("dummy exception");
+    }*/
     // log.info("================ {} -------- count: {}", str, count.get());
   }
 
