@@ -1,7 +1,6 @@
 package com.devon.demo.pojo_approch;
 
 
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
@@ -10,7 +9,6 @@ import org.apache.kafka.common.serialization.IntegerDeserializer;
 import org.apache.kafka.common.serialization.IntegerSerializer;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.kafka.common.serialization.StringSerializer;
-import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory;
 import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
 import org.springframework.kafka.core.DefaultKafkaProducerFactory;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -20,7 +18,6 @@ import org.springframework.kafka.listener.ConcurrentMessageListenerContainer;
 import org.springframework.kafka.listener.adapter.FilteringAcknowledgingMessageListenerAdapter;
 import org.springframework.kafka.listener.adapter.RetryingAcknowledgingMessageListenerAdapter;
 import org.springframework.kafka.listener.config.ContainerProperties;
-import org.springframework.kafka.support.TopicPartitionInitialOffset;
 import org.springframework.retry.backoff.FixedBackOffPolicy;
 import org.springframework.retry.policy.SimpleRetryPolicy;
 import org.springframework.retry.support.RetryTemplate;
@@ -42,8 +39,6 @@ public class KafkaPOJOConfig {
     CustomKafkaMessageListener ckml = new CustomKafkaMessageListener(
         iKafkaConsumer);
 
-    WhateverKafkaMessageListener wkml = new WhateverKafkaMessageListener();
-    wkml.setMessageConverter(new JsonConverter());
     CustomRecordFilter cff = new CustomRecordFilter();
 
 
@@ -72,34 +67,10 @@ public class KafkaPOJOConfig {
         cf, containerProps);
 
     container.setConcurrency(1);
+
     return container;
   }
 
-
-  public ConcurrentKafkaListenerContainerFactory<Integer, String> factory(
-      IKafkaConsumer iKafkaConsumer, Collection<TopicPartitionInitialOffset> tp) {
-
-    Map<String, Object> props = consumerProps();
-
-    DefaultKafkaConsumerFactory<Integer, String> cf                                      = new DefaultKafkaConsumerFactory<>(
-        props);
-
-    ConcurrentKafkaListenerContainerFactory      concurrentKafkaListenerContainerFactory = new ConcurrentKafkaListenerContainerFactory();
-    concurrentKafkaListenerContainerFactory.setConsumerFactory(cf);
-    concurrentKafkaListenerContainerFactory.setConcurrency(1);
-    concurrentKafkaListenerContainerFactory.setAutoStartup(true);
-
-    return concurrentKafkaListenerContainerFactory;
-  }
-
-  public KafkaTemplate<Integer, String> createTemplate() {
-    Map<String, Object> senderProps = senderProps();
-    ProducerFactory<Integer, String> pf =
-        new DefaultKafkaProducerFactory<Integer, String>(senderProps);
-    KafkaTemplate<Integer, String> template = new KafkaTemplate<>(pf);
-
-    return template;
-  }
 
   private Map<String, Object> consumerProps() {
     Map<String, Object> props = new HashMap<>();
@@ -116,6 +87,13 @@ public class KafkaPOJOConfig {
     return props;
   }
 
+  public KafkaTemplate<Integer, String> createTemplate() {
+    Map<String, Object> senderProps = senderProps();
+    ProducerFactory<Integer, String> pf =
+        new DefaultKafkaProducerFactory<Integer, String>(senderProps);
+    KafkaTemplate<Integer, String> template = new KafkaTemplate<>(pf);
+    return template;
+  }
   private Map<String, Object> senderProps() {
     Map<String, Object> props = new HashMap<>();
     props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, "192.168.0.28:9092");
