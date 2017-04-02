@@ -51,26 +51,9 @@ public class CustomKafkaMessageListener implements AcknowledgingMessageListener<
             Instant.ofEpochMilli(data.timestamp()).atZone(ZoneId.systemDefault())
                 .toLocalDateTime());
     DedupTable dt = new DedupTable(data.topic(), data.partition(), data.offset() + 1);
-    iKafkaConsumer.getEvent(str2);
-    dedupRepository.save(dt);
+    this.iKafkaConsumer.getEvent(str2);
+    this.dedupRepository.save(dt);
     acknowledgment.acknowledge();
-
-
-
-/*    try {
-
-      iKafkaConsumer.getEvent(str2);
-      // log.info("Saving offset");
-      //dedupRepository.save(dt);
-      acknowledgment.acknowledge();
-
-    } catch (Exception e) {
-      log.error("exception");
-      /*//* DedupTable dt = new DedupTable(data.topic(), data.partition(), data.offset() );
-      //dedupRepository.save(dt);*//**//*
-
-    }*/
-
   }
 
   @Override
@@ -100,9 +83,7 @@ public class CustomKafkaMessageListener implements AcknowledgingMessageListener<
               Thread.currentThread().getId() + "\\|" + Thread.currentThread().getName(), k.topic(),
               k.partition(), v);
         }
-
       }
-
     });
 
   }
@@ -139,7 +120,7 @@ public class CustomKafkaMessageListener implements AcknowledgingMessageListener<
   public <CustomKafkaMessageListener, Exception extends Throwable> void close(
       RetryContext retryContext,
       RetryCallback<CustomKafkaMessageListener, Exception> retryCallback, Throwable throwable) {
-   // log.info("=========close=========");
+    // log.info("=========close=========");
 
   }
 
@@ -148,7 +129,7 @@ public class CustomKafkaMessageListener implements AcknowledgingMessageListener<
       RetryContext retryContext,
       RetryCallback<CustomKafkaMessageListener, Exception> retryCallback, Throwable throwable) {
 
-   log.info("========onError========== count: {}", retryContext.getRetryCount());
+    log.info("========onError========== count: {}", retryContext.getRetryCount());
 
   }
 }

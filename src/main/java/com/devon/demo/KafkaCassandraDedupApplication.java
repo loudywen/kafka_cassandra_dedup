@@ -33,6 +33,8 @@ public class KafkaCassandraDedupApplication implements IKafkaConsumer, Applicati
   static  KafkaCassandraDedupApplication k     = new KafkaCassandraDedupApplication();
   private AtomicLong                     count = new AtomicLong();
   static ConcurrentMessageListenerContainer<Integer, String> container2;
+  static ConcurrentMessageListenerContainer<Integer, String> container;
+
 
   public static void main(String[] args) throws InterruptedException {
     SpringApplication.run(KafkaCassandraDedupApplication.class, args);
@@ -113,7 +115,7 @@ public class KafkaCassandraDedupApplication implements IKafkaConsumer, Applicati
 
     ContainerProperties containerProps = new ContainerProperties("dedup");
 
-    ConcurrentMessageListenerContainer<Integer, String> container = kconfig
+    container = kconfig
         .createContainer(containerProps, k);
     container.setBeanName("dedup-");
 
@@ -132,19 +134,19 @@ public class KafkaCassandraDedupApplication implements IKafkaConsumer, Applicati
 
   @GetMapping("/stop")
   public void stop() {
-    container2.stop();
+    container.stop();
   }
 
   @GetMapping("/start")
   public void start() {
-    container2.start();
+    container.start();
   }
 
   @Override
   public void getEvent(String str) {
     log.info("{} - Thread: {}", str,
         Thread.currentThread().getId() + "\\|" + Thread.currentThread().getName());
-    throw new RuntimeException();
+    //throw new RuntimeException();
 
   }
 

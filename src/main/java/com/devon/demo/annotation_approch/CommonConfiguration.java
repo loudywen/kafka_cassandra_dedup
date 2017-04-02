@@ -1,3 +1,4 @@
+/*
 package com.devon.demo.annotation_approch;
 
 import org.apache.kafka.clients.consumer.ConsumerConfig;
@@ -91,3 +92,4 @@ public class CommonConfiguration {
   }
 
 }
+*/
