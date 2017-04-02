@@ -28,6 +28,7 @@ public class KafkaPOJOConfigTest implements IKafkaConsumer {
 
     }
 
+
     template.flush();
   }
 

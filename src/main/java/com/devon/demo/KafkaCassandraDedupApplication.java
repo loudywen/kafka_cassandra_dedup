@@ -4,8 +4,6 @@ import com.devon.demo.cassandra.DedupRepository;
 import com.devon.demo.cassandra.DedupTable;
 import com.devon.demo.pojo_approch.IKafkaConsumer;
 import com.devon.demo.pojo_approch.KafkaPOJOConfig;
-import java.util.List;
-import java.util.concurrent.atomic.AtomicLong;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
@@ -19,6 +17,9 @@ import org.springframework.kafka.listener.config.ContainerProperties;
 import org.springframework.kafka.support.TopicPartitionInitialOffset;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.List;
+import java.util.concurrent.atomic.AtomicLong;
 
 @SpringBootApplication
 @EnableCassandraRepositories(basePackages = {"com.devon.demo.cassandra"})
@@ -95,14 +96,6 @@ public class KafkaCassandraDedupApplication implements IKafkaConsumer, Applicati
 
 */
 
-
-
-
-
-
-
-
-
     DedupRepository dedupRepository = (DedupRepository) KafkaCassandraDedupApplication
         .getApplicationContext().getBean("dedupRepository");
 
@@ -134,8 +127,6 @@ public class KafkaCassandraDedupApplication implements IKafkaConsumer, Applicati
 //    container2.start();
     //kconfig.factory(containerProps,k);
 
-
-
   }
 
 
@@ -154,13 +145,7 @@ public class KafkaCassandraDedupApplication implements IKafkaConsumer, Applicati
     log.info("{} - Thread: {}", str,
         Thread.currentThread().getId() + "\\|" + Thread.currentThread().getName());
     throw new RuntimeException();
-    //if (count.incrementAndGet()< 3) {
-   /* if (str.contains("foo4")) {
-      //log.info(str);
-    } else {
-     // throw new RuntimeException("dummy exception");
-    }*/
-    // log.info("================ {} -------- count: {}", str, count.get());
+
   }
 
   @Override

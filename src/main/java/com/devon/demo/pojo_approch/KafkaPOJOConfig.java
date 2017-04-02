@@ -1,5 +1,6 @@
 package com.devon.demo.pojo_approch;
 
+
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -23,6 +24,9 @@ import org.springframework.kafka.support.TopicPartitionInitialOffset;
 import org.springframework.retry.backoff.FixedBackOffPolicy;
 import org.springframework.retry.policy.SimpleRetryPolicy;
 import org.springframework.retry.support.RetryTemplate;
+
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Created by Devon on 3/18/2017.
@@ -48,6 +52,7 @@ public class KafkaPOJOConfig {
 
     FilteringAcknowledgingMessageListenerAdapter faml = new FilteringAcknowledgingMessageListenerAdapter(
         ckml, cff, true);
+
 
     SimpleRetryPolicy retryPolicy = new SimpleRetryPolicy();
     retryPolicy.setMaxAttempts(5);
@@ -104,6 +109,7 @@ public class KafkaPOJOConfig {
     props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, "192.168.0.28:9092");
 //    props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, "172.16.143.138:9092");
 
+
     props.put(ConsumerConfig.GROUP_ID_CONFIG, "pojokafka");
     props.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, false);
     //props.put(ConsumerConfig.AUTO_COMMIT_INTERVAL_MS_CONFIG, "100");
@@ -115,8 +121,8 @@ public class KafkaPOJOConfig {
 
   private Map<String, Object> senderProps() {
     Map<String, Object> props = new HashMap<>();
-    props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, "192.168.0.28:9092");
-//    props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, "172.16.143.138:9092");
+//    props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, "192.168.0.28:9092");
+    props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, "172.16.143.138:9092");
 
     props.put(ProducerConfig.RETRIES_CONFIG, 0);
     props.put(ProducerConfig.BATCH_SIZE_CONFIG, 16384);
