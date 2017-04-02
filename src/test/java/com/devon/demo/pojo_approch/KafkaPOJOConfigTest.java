@@ -24,7 +24,7 @@ public class KafkaPOJOConfigTest implements IKafkaConsumer {
     for(int x = 0 ; x <1; x++){
    //   GenericMessage<String> msg = new GenericMessage<String>("test"+x);
       //template.send(msg);
-       template.sendDefault(x, "foo4");
+       template.sendDefault(x, "foo");
 
     }
 

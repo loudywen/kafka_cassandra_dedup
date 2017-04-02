@@ -16,7 +16,15 @@ public class CustomRecordFilter implements RecordFilterStrategy<Integer, String>
     @Override
     public boolean filter(ConsumerRecord<Integer, String> consumerRecord) {
         log.info("=================filter trigger=============== Thread: {}", Thread.currentThread().getId()+"\\|"+Thread.currentThread().getName());
-        return false;
+        if(consumerRecord.value().contains("foo4")){
+            log.info("filter foo4");
+            return true;
+        }else{
+            log.info("delegate {}",consumerRecord.value());
+            return false;
+
+        }
+
 
     }
 }

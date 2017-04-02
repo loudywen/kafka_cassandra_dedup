@@ -1,5 +1,6 @@
 package com.devon.demo.pojo_approch;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
@@ -8,6 +9,7 @@ import org.apache.kafka.common.serialization.IntegerDeserializer;
 import org.apache.kafka.common.serialization.IntegerSerializer;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.kafka.common.serialization.StringSerializer;
+import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory;
 import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
 import org.springframework.kafka.core.DefaultKafkaProducerFactory;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -17,6 +19,7 @@ import org.springframework.kafka.listener.ConcurrentMessageListenerContainer;
 import org.springframework.kafka.listener.adapter.FilteringAcknowledgingMessageListenerAdapter;
 import org.springframework.kafka.listener.adapter.RetryingAcknowledgingMessageListenerAdapter;
 import org.springframework.kafka.listener.config.ContainerProperties;
+import org.springframework.kafka.support.TopicPartitionInitialOffset;
 import org.springframework.retry.backoff.FixedBackOffPolicy;
 import org.springframework.retry.policy.SimpleRetryPolicy;
 import org.springframework.retry.support.RetryTemplate;
@@ -38,7 +41,11 @@ public class KafkaPOJOConfig {
     CustomKafkaMessageListener ckml = new CustomKafkaMessageListener(
         iKafkaConsumer);
 
+    WhateverKafkaMessageListener wkml = new WhateverKafkaMessageListener();
+    wkml.setMessageConverter(new JsonConverter());
     CustomRecordFilter cff = new CustomRecordFilter();
+
+
     FilteringAcknowledgingMessageListenerAdapter faml = new FilteringAcknowledgingMessageListenerAdapter(
         ckml, cff, true);
 
@@ -58,29 +65,30 @@ public class KafkaPOJOConfig {
     containerProps.setMessageListener(rml);
     containerProps.setAckMode(AbstractMessageListenerContainer.AckMode.MANUAL_IMMEDIATE);
     containerProps.setErrorHandler(ckml);
-containerProps.setAckOnError(false);
+    containerProps.setAckOnError(false);
     ConcurrentMessageListenerContainer<Integer, String> container = new ConcurrentMessageListenerContainer<>(
         cf, containerProps);
 
-    container.setConcurrency(10);
+    container.setConcurrency(1);
     return container;
   }
 
 
-/*public ConcurrentKafkaListenerContainerFactory<Integer, String> factory (ContainerProperties containerProps, IKafkaConsumer iKafkaConsumer){
-    ConcurrentKafkaListenerContainerFactory concurrentKafkaListenerContainerFactory = new ConcurrentKafkaListenerContainerFactory();
+  public ConcurrentKafkaListenerContainerFactory<Integer, String> factory(
+      IKafkaConsumer iKafkaConsumer, Collection<TopicPartitionInitialOffset> tp) {
+
     Map<String, Object> props = consumerProps();
 
-    DefaultKafkaConsumerFactory<Integer, String> cf = new DefaultKafkaConsumerFactory<Integer, String>(props);
+    DefaultKafkaConsumerFactory<Integer, String> cf                                      = new DefaultKafkaConsumerFactory<>(
+        props);
+
+    ConcurrentKafkaListenerContainerFactory      concurrentKafkaListenerContainerFactory = new ConcurrentKafkaListenerContainerFactory();
     concurrentKafkaListenerContainerFactory.setConsumerFactory(cf);
-    concurrentKafkaListenerContainerFactory.setConcurrency(10);
-    CustomKafkaMessageListener ckml = new CustomKafkaMessageListener(iKafkaConsumer);
-    concurrentKafkaListenerContainerFactory.getContainerProperties().setMessageListener(ckml);
+    concurrentKafkaListenerContainerFactory.setConcurrency(1);
     concurrentKafkaListenerContainerFactory.setAutoStartup(true);
 
-
     return concurrentKafkaListenerContainerFactory;
-}*/
+  }
 
   public KafkaTemplate<Integer, String> createTemplate() {
     Map<String, Object> senderProps = senderProps();

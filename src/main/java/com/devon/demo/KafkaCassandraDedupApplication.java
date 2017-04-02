@@ -36,6 +36,73 @@ public class KafkaCassandraDedupApplication implements IKafkaConsumer, Applicati
   public static void main(String[] args) throws InterruptedException {
     SpringApplication.run(KafkaCassandraDedupApplication.class, args);
 
+/*    DedupRepository dedupRepository = (DedupRepository) KafkaCassandraDedupApplication
+        .getApplicationContext().getBean("dedupRepository");
+
+    List<DedupTable> listDedupTable = dedupRepository.findAll();
+
+    List<TopicPartitionInitialOffset> topic1PartitionS = new ArrayList<>();
+
+    for (int x = 0; x < listDedupTable.size(); x++) {
+      topic1PartitionS.add(new TopicPartitionInitialOffset(listDedupTable.get(x).getTopicName(),
+          listDedupTable.get(x).getPartition(), listDedupTable.get(x).getOffset()));
+    }
+
+    KafkaPOJOConfig kconfig = new KafkaPOJOConfig();
+
+    ConcurrentKafkaListenerContainerFactory<Integer, String> factory = kconfig
+        .factory(k, topic1PartitionS);
+    factory.setAutoStartup(true);
+    factory.getContainerProperties()
+        .setAckMode(AbstractMessageListenerContainer.AckMode.MANUAL_IMMEDIATE);
+    factory.getContainerProperties().setAckOnError(false);
+    factory.setRetryTemplate(new RetryTemplate());
+    CustomKafkaMessageListener ckml = new CustomKafkaMessageListener(k);
+    factory.getContainerProperties().setErrorHandler(ckml);*/
+
+  /*  factory.createListenerContainer(new KafkaListenerEndpoint() {
+      @Override
+      public String getId() {
+        return "diwen";
+      }
+
+      @Override
+      public String getGroup() {
+        return "pojokafka";
+      }
+
+      @Override
+      public Collection<String> getTopics() {
+        return Arrays.asList("dedup");
+      }
+
+      @Override
+      public Collection<TopicPartitionInitialOffset> getTopicPartitions() {
+        return topic1PartitionS;
+      }
+
+      @Override
+      public Pattern getTopicPattern() {
+        return null;
+      }
+
+      @Override
+      public void setupListenerContainer(MessageListenerContainer listenerContainer,
+          MessageConverter messageConverter) {
+        listenerContainer.setupMessageListener(ckml);
+      }
+    });
+
+*/
+
+
+
+
+
+
+
+
+
     DedupRepository dedupRepository = (DedupRepository) KafkaCassandraDedupApplication
         .getApplicationContext().getBean("dedupRepository");
 
@@ -68,18 +135,17 @@ public class KafkaCassandraDedupApplication implements IKafkaConsumer, Applicati
     //kconfig.factory(containerProps,k);
 
 
-   /* Thread.sleep(5000);
-    container.stop();*/
+
   }
 
 
   @GetMapping("/stop")
-  public void stop(){
+  public void stop() {
     container2.stop();
   }
 
   @GetMapping("/start")
-  public void start(){
+  public void start() {
     container2.start();
   }
 
@@ -87,6 +153,7 @@ public class KafkaCassandraDedupApplication implements IKafkaConsumer, Applicati
   public void getEvent(String str) {
     log.info("{} - Thread: {}", str,
         Thread.currentThread().getId() + "\\|" + Thread.currentThread().getName());
+    throw new RuntimeException();
     //if (count.incrementAndGet()< 3) {
    /* if (str.contains("foo4")) {
       //log.info(str);

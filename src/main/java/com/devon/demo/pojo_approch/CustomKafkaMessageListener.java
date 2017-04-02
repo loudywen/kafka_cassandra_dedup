@@ -148,7 +148,7 @@ public class CustomKafkaMessageListener implements AcknowledgingMessageListener<
       RetryContext retryContext,
       RetryCallback<CustomKafkaMessageListener, Exception> retryCallback, Throwable throwable) {
 
-   // log.info("========onError========== count: {}, {}", retryContext.getRetryCount(), throwable);
+   log.info("========onError========== count: {}", retryContext.getRetryCount());
 
   }
 }
