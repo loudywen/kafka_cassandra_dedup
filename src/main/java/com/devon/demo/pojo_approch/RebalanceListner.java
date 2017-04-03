@@ -8,6 +8,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import org.apache.commons.lang3.text.StrBuilder;
+import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerRebalanceListener;
 import org.apache.kafka.clients.consumer.OffsetAndMetadata;
 import org.apache.kafka.common.TopicPartition;
@@ -18,14 +19,14 @@ public class RebalanceListner implements ConsumerRebalanceListener {
 
   private Logger                                 log            = LoggerFactory
       .getLogger(RebalanceListner.class);
- // private KafkaConsumer consumer;
+  private Consumer consumer;
   private Map<TopicPartition, OffsetAndMetadata> currentOffsets = new HashMap();
 
-/*
-  public RebalanceListner(KafkaConsumer con){
+
+  public RebalanceListner(Consumer con){
     this.consumer=con;
   }
-*/
+
 
   public void addOffset(String topic, int partition, long offset) {
     currentOffsets
@@ -45,19 +46,16 @@ public class RebalanceListner implements ConsumerRebalanceListener {
   }
 
   public void onPartitionsRevoked(Collection<TopicPartition> partitions) {
-    StrBuilder sb = new StrBuilder();
-    for (TopicPartition partition : partitions) {
-      sb.append(partition.partition() + " ");
-    }
-    log.info("Following Partitions Revoked .... " +sb.toString());
-
-    StrBuilder sb2= new StrBuilder();
-    for (TopicPartition tp : currentOffsets.keySet()) {
-     sb2.append(tp.partition()+" ");
-    }
-    System.out.println("Following Partitions committed .... "+sb2.toString());
+    System.out.println("Following Partitions Revoked ....");
+    for(TopicPartition partition: partitions)
+      System.out.println(partition.partition()+",");
 
 
+    System.out.println("Following Partitions commited ...." );
+    for(TopicPartition tp: currentOffsets.keySet())
+      System.out.println(tp.partition());
+
+    consumer.commitSync(currentOffsets);
     currentOffsets.clear();
   }
 }

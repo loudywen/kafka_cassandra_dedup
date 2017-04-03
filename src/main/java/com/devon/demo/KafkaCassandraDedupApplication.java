@@ -13,12 +13,10 @@ import org.springframework.context.ApplicationContextAware;
 import org.springframework.data.cassandra.repository.config.EnableCassandraRepositories;
 import org.springframework.kafka.listener.ConcurrentMessageListenerContainer;
 import org.springframework.kafka.listener.config.ContainerProperties;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RestController;
 
 @SpringBootApplication
 @EnableCassandraRepositories(basePackages = {"com.devon.demo.cassandra"})
-@RestController
+//@RestController
 public class KafkaCassandraDedupApplication implements IKafkaConsumer, ApplicationContextAware {
 
 
@@ -32,6 +30,10 @@ public class KafkaCassandraDedupApplication implements IKafkaConsumer, Applicati
 
 
   public static void main(String[] args) throws InterruptedException {
+
+    /*ConsumerGroupCommand
+        .main(new String[] {"--bootstrap-server","192.168.0.28:9092","--describe","--group","pojokafka"});*/
+
     SpringApplication.run(KafkaCassandraDedupApplication.class, args);
 
 /*    DedupRepository dedupRepository = (DedupRepository) KafkaCassandraDedupApplication
@@ -94,16 +96,6 @@ public class KafkaCassandraDedupApplication implements IKafkaConsumer, Applicati
 */
 
 
-
-
-
-
-
-
-
-
-
-
 /*
 
     DedupRepository dedupRepository = (DedupRepository) KafkaCassandraDedupApplication
@@ -128,7 +120,7 @@ public class KafkaCassandraDedupApplication implements IKafkaConsumer, Applicati
         .createContainer(containerProps, k);
     container.setBeanName("dedup-");
 
-    //container.start();
+    container.start();
 
 //    ContainerProperties containerProps2 = new ContainerProperties("dedup2");
 
@@ -141,7 +133,7 @@ public class KafkaCassandraDedupApplication implements IKafkaConsumer, Applicati
   }
 
 
-  @GetMapping("/stop")
+/*  @GetMapping("/stop")
   public void stop() {
     container.stop();
   }
@@ -149,13 +141,13 @@ public class KafkaCassandraDedupApplication implements IKafkaConsumer, Applicati
   @GetMapping("/start")
   public void start() {
     container.start();
-  }
+  }*/
 
   @Override
   public void getEvent(String str) {
     log.info("{} - Thread: {}", str,
         Thread.currentThread().getId() + "\\|" + Thread.currentThread().getName());
-    //throw new RuntimeException();
+   // throw new RuntimeException();
 
   }
 

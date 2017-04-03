@@ -1,11 +1,10 @@
 package com.devon.demo.pojo_approch;
 
+import java.util.concurrent.CountDownLatch;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.kafka.core.KafkaTemplate;
-
-import java.util.concurrent.CountDownLatch;
 
 /**
  * Created by Devon on 3/18/2017.
@@ -32,27 +31,14 @@ public class KafkaPOJOConfigTest implements IKafkaConsumer {
     template.flush();
   }
 
-/*
+
   @Test
-  public void consumer_1() throws InterruptedException {
-    KafkaPOJOConfig kconfig = new KafkaPOJOConfig();
-
-    ContainerProperties                                 containerProps = new ContainerProperties(
-        "dedup");
-    ConcurrentMessageListenerContainer<Integer, String> container      = kconfig
-        .createContainer(containerProps, this);
-    container.start();
-    Thread.sleep(2000);
-
-    try {
-      latch.await();
-      container.stop();
-    } catch (Exception e) {
-      e.printStackTrace();
-    }
+  public void consumer_1() throws Exception {
+   // URL u = new URL("192.168.0.28:9092");
+  //  ConsumerGroupCommand.main(new String[] {"--bootstrap-server","192.168.0.28:9092","--describe","--group","pojokafka"});
 
   }
-*/
+
 
   @Override
   public void getEvent(String str) {

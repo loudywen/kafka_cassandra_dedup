@@ -6,14 +6,11 @@ import com.devon.demo.cassandra.DedupTable;
 import java.text.SimpleDateFormat;
 import java.time.Instant;
 import java.time.ZoneId;
-import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
-import org.apache.kafka.common.TopicPartition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.kafka.listener.AcknowledgingMessageListener;
-import org.springframework.kafka.listener.ConsumerSeekAware;
 import org.springframework.kafka.listener.ErrorHandler;
 import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.retry.RetryCallback;
@@ -25,20 +22,22 @@ import org.springframework.retry.RetryListener;
  * Created by Devon on 3/18/2017.
  */
 public class CustomKafkaMessageListener implements AcknowledgingMessageListener<Integer, String>,
-    ConsumerSeekAware, ErrorHandler, RetryListener {
+   ErrorHandler, RetryListener {
 
   private IKafkaConsumer iKafkaConsumer;
   private Logger log = LoggerFactory.getLogger(CustomKafkaMessageListener.class);
   private       DedupRepository  dedupRepository;
   private final SimpleDateFormat simpleDateFormat;
   private AtomicLong retryCount = new AtomicLong();
+private RebalanceListner rebalanceListner;
+  //private ThreadLocal<ConsumerSeekCallback> threadLocal = new ThreadLocal<>();
 
-  private ThreadLocal<ConsumerSeekCallback> threadLocal = new ThreadLocal<>();
-
-  public CustomKafkaMessageListener(IKafkaConsumer iKafkaConsumer) {
+  public CustomKafkaMessageListener(IKafkaConsumer iKafkaConsumer,
+      RebalanceListner rebalanceListner) {
     this.iKafkaConsumer = iKafkaConsumer;
     this.dedupRepository = (DedupRepository) KafkaCassandraDedupApplication.getApplicationContext()
         .getBean("dedupRepository");
+    this.rebalanceListner=rebalanceListner;
     simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss:SSS");
   }
 
@@ -51,12 +50,16 @@ public class CustomKafkaMessageListener implements AcknowledgingMessageListener<
             Instant.ofEpochMilli(data.timestamp()).atZone(ZoneId.systemDefault())
                 .toLocalDateTime());
     DedupTable dt = new DedupTable(data.topic(), data.partition(), data.offset() + 1);
-    this.iKafkaConsumer.getEvent(str2);
-    this.dedupRepository.save(dt);
-    acknowledgment.acknowledge();
+
+      this.iKafkaConsumer.getEvent(str2);
+      this.dedupRepository.save(dt);
+      rebalanceListner.addOffset(data.topic(),data.partition(),data.offset()+1);
+     // acknowledgment.acknowledge();
+
+
   }
 
-  @Override
+/*  @Override
   public void registerSeekCallback(ConsumerSeekCallback consumerSeekCallback) {
     log.info("===================Thread: {}", Thread.currentThread().getId());
     threadLocal.set(consumerSeekCallback);
@@ -86,14 +89,14 @@ public class CustomKafkaMessageListener implements AcknowledgingMessageListener<
       }
     });
 
-  }
+  }*/
 
-  @Override
+ /* @Override
   public void onIdleContainer(Map<TopicPartition, Long> map,
       ConsumerSeekCallback consumerSeekCallback) {
     //log.info("===================onIdleContainer");
 
-  }
+  }*/
 
 
   @Override
@@ -104,6 +107,12 @@ public class CustomKafkaMessageListener implements AcknowledgingMessageListener<
         data.offset(), data.value());
     log.error(thrownException.getMessage(), thrownException);
     log.error("==========error handler re seek the fail offset =========== ");
+    try {
+      log.info("===============throw exception=================");
+      throw  new Exception(thrownException.getMessage());
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
     //threadLocal.get().seek(data.topic(), data.partition(), data.offset());
   }
 

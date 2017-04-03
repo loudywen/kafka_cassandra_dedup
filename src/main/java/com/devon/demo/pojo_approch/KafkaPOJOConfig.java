@@ -35,16 +35,15 @@ public class KafkaPOJOConfig {
 
     DefaultKafkaConsumerFactory<Integer, String> cf = new DefaultKafkaConsumerFactory<Integer, String>(
         props);
+    RebalanceListner rebalanceListner = new RebalanceListner(cf.createConsumer());
 
     CustomKafkaMessageListener ckml = new CustomKafkaMessageListener(
-        iKafkaConsumer);
+        iKafkaConsumer, rebalanceListner);
 
     CustomRecordFilter cff = new CustomRecordFilter();
 
-
     FilteringAcknowledgingMessageListenerAdapter faml = new FilteringAcknowledgingMessageListenerAdapter(
         ckml, cff, true);
-
 
     SimpleRetryPolicy retryPolicy = new SimpleRetryPolicy();
     retryPolicy.setMaxAttempts(5);
@@ -58,7 +57,7 @@ public class KafkaPOJOConfig {
     rt.registerListener(ckml);
     RetryingAcknowledgingMessageListenerAdapter rml = new RetryingAcknowledgingMessageListenerAdapter(
         faml, rt);
-
+    containerProps.setConsumerRebalanceListener(rebalanceListner);
     containerProps.setMessageListener(rml);
     containerProps.setAckMode(AbstractMessageListenerContainer.AckMode.MANUAL_IMMEDIATE);
     containerProps.setErrorHandler(ckml);
@@ -77,10 +76,11 @@ public class KafkaPOJOConfig {
     props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, "192.168.0.28:9092");
 //    props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, "172.16.143.138:9092");
 
-
     props.put(ConsumerConfig.GROUP_ID_CONFIG, "pojokafka");
     props.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, false);
-    props.put(ConsumerConfig.AUTO_COMMIT_INTERVAL_MS_CONFIG, "100");
+   // props.put(ConsumerConfig.AUTO_COMMIT_INTERVAL_MS_CONFIG, "100");
+    props.put(ConsumerConfig.MAX_POLL_RECORDS_CONFIG, 100);
+    props.put(ConsumerConfig.MAX_POLL_INTERVAL_MS_CONFIG,14000);
     props.put(ConsumerConfig.SESSION_TIMEOUT_MS_CONFIG, "15000");
     props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, IntegerDeserializer.class);
     props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
@@ -94,6 +94,7 @@ public class KafkaPOJOConfig {
     KafkaTemplate<Integer, String> template = new KafkaTemplate<>(pf);
     return template;
   }
+
   private Map<String, Object> senderProps() {
     Map<String, Object> props = new HashMap<>();
     props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, "192.168.0.28:9092");
